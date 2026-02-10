@@ -5,7 +5,7 @@ import User from "../models/User.js";
 export const inngest = new Inngest({
   id: "INTERVO",
   signingKey: process.env.INNGEST_SIGNING_KEY,
-  isDev: process.env.NODE_ENV !== "production",
+  isDev: false,
 });
 
 
