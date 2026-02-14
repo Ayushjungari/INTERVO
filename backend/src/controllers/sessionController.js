@@ -86,26 +86,30 @@ export async function getMyRecentSessions(req, res) {
   }
 }
 
-export async function getSessionById(req, res) {
-    try {
-    const { id } = req.params;
+export async function getMyRecentSessions(req, res) {
+  try {
+    const userId = req.user._id;
 
-    const session = await Session.findById(id)
-      .populate("host", "name email profileImage clerkId")
-      .populate("participant", "name email profileImage clerkId");
+    // get sessions where user is either host or participant
+    const sessions = await Session.find({
+      status: "completed",
+      $or: [{ host: userId }, { participant: userId }],
+    })
+      .populate("host", "name profileImage email clerkId")
+      .populate("participant", "name profileImage email clerkId")
+      .sort({ createdAt: -1 })
+      .limit(20);
 
-    if (!session)
-      return res.status(404).json({ message: "Session not found" });
-
-    res.status(200).json({ session });
+    res.status(200).json({ sessions });
   } catch (error) {
     console.log(
-      "Error in getSessionById controller:",
+      "Error in getMyRecentSessions controller:",
       error.message
     );
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
 
 export async function joinSession(req, res) {
      try {
@@ -146,47 +150,62 @@ res.status(200).json({ session })
 }
 
 export async function endSession(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const session = await Session.findById(id);
+
+    if (!session)
+      return res.status(404).json({ message: "Session not found" });
+
+    // check if user is the host
+    if (session.host.toString() !== userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Only the host can end the session" });
+    }
+
+    // check if session is already completed
+    if (session.status === "completed") {
+      return res
+        .status(400)
+        .json({ message: "Session is already completed" });
+    }
+
+    // delete stream video call
     try {
-  const { id } = req.params;
-  const userId = req.user._id;
+      const call = streamClient.video.call("default", session.callId);
+      await call.delete({ hard: true });
+    } catch (error) {
+      console.log("Error deleting video call:", error.message);
+      return res
+        .status(500)
+        .json({ message: "Failed to delete video call" });
+    }
 
-  const session = await Session.findById(id);
+    // delete stream chat channel
+    try {
+      const channel = chatClient.channel("messaging", session.callId);
+      await channel.delete();
+    } catch (error) {
+      console.log("Error deleting chat channel:", error.message);
+      return res
+        .status(500)
+        .json({ message: "Failed to delete chat channel" });
+    }
 
-  if (!session)
-    return res.status(404).json({ message: "Session not found" });
+    // update DB only after cleanup succeeds
+    session.status = "completed";
+    await session.save();
 
-  // check if user is the host
-  if (session.host.toString() !== userId.toString()) {
-    return res
-      .status(403)
-      .json({ message: "Only the host can end the session" });
-  }
-
-  // check if session is already completed
-  if (session.status === "completed") {
-    return res
-      .status(400)
-      .json({ message: "Session is already completed" });
-  }
-
-  
-
-  // delete stream video call
-const call = streamClient.video.call("default", session.callId);
-await call.delete({ hard: true });
-
-// delete stream chat channel
-const channel = chatClient.channel("messaging", session.callId);
-await channel.delete();
-
-session.status = "completed"
-  await session.save()
-res.status(200).json({session,message: "Session ended successfully"});
-
-
-} catch (error) {
+    res.status(200).json({
+      session,
+      message: "Session ended successfully",
+    });
+  } catch (error) {
     console.log("Error in endSession controller:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
-}
