@@ -51,9 +51,14 @@ export async function getActiveSessions(_, res) {
 
     res.status(200).json({ sessions });
   } catch (error) {
-    console.log("Error in getActiveSessions controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
+  console.error("========== CREATE SESSION ERROR ==========");
+  console.error(error);
+  console.error(error.stack);
+
+  res.status(500).json({
+    message: error.message,
+  });
+}
 }
 
 export async function getMyRecentSessions(req, res) {
