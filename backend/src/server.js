@@ -16,6 +16,7 @@ const app = express();
 const __dirname = path.resolve();
 
 app.use(express.json({ limit: "1mb" }));
+console.log("CLIENT_URL =", ENV.CLIENT_URL);
 app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(clerkMiddleware());
 
