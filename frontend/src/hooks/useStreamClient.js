@@ -36,6 +36,17 @@ function useStreamClient(session, loadingSession, isHost, isParticipant) {
 
         videoCall = client.call("default", session.callId);
         await videoCall.join({ create: true });
+        
+
+        console.log("Camera enabled");
+        console.log("========== STREAM DEBUG ==========");
+        console.log("Joined Call");
+        console.log("Call :", videoCall);
+        console.log("Camera :", videoCall.camera);
+        console.log("Microphone :", videoCall.microphone);
+        console.log("=================================");
+        console.log("Camera state:", videoCall.camera.state);
+        console.log("Microphone state:", videoCall.microphone.state);
         setCall(videoCall);
 
         const apiKey = import.meta.env.VITE_STREAM_API_KEY;
