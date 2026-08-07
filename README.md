@@ -42,7 +42,7 @@ CLIENT_URL=http://localhost:5173
 Frontend (/frontend)
 VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:8000/api
 
 VITE_STREAM_API_KEY=your_stream_api_key
 🔧 Run the Backend
