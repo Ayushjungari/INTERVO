@@ -1,5 +1,6 @@
 ✨ Full-Stack Interview Platform ✨
-Demo App
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/cf303178-9107-4697-b563-75bae950e51e" />
+
 
 ✨ Highlights:
 
